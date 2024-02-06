@@ -1,4 +1,5 @@
 using System.Buffers;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using ProtoBuf;
@@ -38,7 +39,7 @@ public class DirectConnectTests
     
 
     [Fact]
-    public async Task ConnectionBetweenServerAndClient()
+    public async Task VoidRequest()
     {
         using ServerApp srv = new ServerApp();
         var customHandler = Substitute.For<IRequestHandler<FooVoidRequest>>();
@@ -63,6 +64,34 @@ public class DirectConnectTests
 
         await customHandler.Received(1).Handle(Arg.Is<FooVoidRequest>(x => x.Name == "Test"));
     }
+    [Fact]
+    public async Task RequestResponse()
+    {
+        using ServerApp srv = new ServerApp();
+        var customHandler = Substitute.For<IRequestHandler<FooRequest, FooResponse>>();
+        customHandler.Handle(Arg.Any<FooRequest>()).Returns(Task.FromResult(new FooResponse() { Name="Test2" }));
 
-        
+        await srv.StartAsync(x =>
+        {
+            x.AddRequest<FooVoidRequest>()
+                .AddRequestResponse<FooRequest, FooResponse>()
+                .AddSingleton(customHandler)
+                .AddServerDirectConnect();
+        });
+
+        using var client = new ClientApp();
+
+        var sp = client.Start(service => service.AddClientDirectConnect()
+            .AddClientInvoker<FooVoidRequest>()
+            .AddClientInvoker<FooRequest, FooResponse>());
+
+        var clientPool = sp.GetRequiredService<IRequestInvokerPool>();
+        var invoker = clientPool.Get("http://localhost:5001");
+        var ret = await invoker.Invoke<FooRequest, FooResponse>(new FooRequest());
+        ret.Name.Should().Be("Test2");
+
+        await customHandler.Received(1).Handle(Arg.Is<FooRequest>(x => x.Name == "Test"));
+    }
+
+
 }

@@ -43,6 +43,16 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<RequestHandlerAdapter<TRequest>>();
         return services;
     }
+    public static IServiceCollection AddRequestResponse<TRequest,TResponse>(this IServiceCollection services)
+    {
+        if (!services.TryGetSingleton<TypeRegister>(out var registry))
+            services.AddSingleton(registry = new TypeRegister());
+
+        registry.Index(typeof(TRequest)).Index(typeof(TResponse));
+        services.AddSingleton<IRequestResponseHandlerAdapter<TRequest>, RequestHandlerAdapter<TRequest, TResponse>>();
+        
+        return services;
+    }
     public static IServiceCollection AddRequestHandler<TRequest, TRequestHandler>(this IServiceCollection services)
     where TRequestHandler: class, IRequestHandler<TRequest>
     {

@@ -1,0 +1,12 @@
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\bin\Debug\net8.0\ModelingEvolution.DirectConnect.deps.json
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\bin\Debug\net8.0\ModelingEvolution.DirectConnect.dll
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\bin\Debug\net8.0\ModelingEvolution.DirectConnect.pdb
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.csproj.AssemblyReference.cache
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.GeneratedMSBuildEditorConfig.editorconfig
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.AssemblyInfoInputs.cache
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.AssemblyInfo.cs
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.csproj.CoreCompileInputs.cache
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.dll
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\refint\ModelingEvolution.DirectConnect.dll
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ModelingEvolution.DirectConnect.pdb
+G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect\obj\Debug\net8.0\ref\ModelingEvolution.DirectConnect.dll

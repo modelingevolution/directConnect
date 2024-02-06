@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = ModelingEvolution.DirectConnect.Tests
-build_property.ProjectDir = G:\DirectConnect\ModelingEvolution.DirectConnect\ModelingEvolution.DirectConnect.Tests\
+build_property.ProjectDir = H:\directConnect\ModelingEvolution.DirectConnect.Tests\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

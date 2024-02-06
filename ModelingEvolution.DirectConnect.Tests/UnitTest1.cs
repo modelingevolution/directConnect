@@ -3,42 +3,48 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using NSubstitute;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace ModelingEvolution.DirectConnect.Tests
 {
+    [ProtoContract]
+    public class FooRequest
+    {
+        [ProtoMember(1)] public string Name { get; set; } = "Test";
+    }
+
+   
     public class UnitTest1
     {
         
 
-        private Message Example()
+        private (byte[], Guid) Example()
         {
             var buffer = new ArrayBufferWriter<byte>();
-            Serializer.Serialize(buffer, new Message());
-            Message m = new Message()
-            {
-                Data = buffer.WrittenSpan.ToArray(),
-                TypeId = typeof(Message).NameId()
-            };
-            return m;
+            Serializer.Serialize(buffer, new FooRequest());
+            return (buffer.WrittenSpan.ToArray(), typeof(FooRequest).NameId());
+            
         }
 
         [Fact]
-        public void RunningServerTest()
+        public async Task RunningServerTest()
         {
             IServiceCollection service = new ServiceCollection();
-            service.AddRequestHandler();
+            service.AddSingleton<MessageController>();
+            service.AddRequest<FooRequest>();
+            var customHandler = Substitute.For<IRequestHandler<FooRequest>>();
+            service.AddSingleton<IRequestHandler<FooRequest>>(customHandler);
             IServiceProvider sp = service.BuildServiceProvider();
             
           
-            var handler =sp.GetRequiredService<MessageRequestHandler>();
-            var msg = Example();
-            handler.Handle(msg);
+            var handler =sp.GetRequiredService<MessageController>();
+            var (data, messageId )= Example();
+            await handler.Dispatch(messageId,data);
 
-
-            //Jakis IRequestHandler zostanie wywolany.
-            //sp.GetRequiredService<FooRequest>().Received(1).M;
+            await customHandler.Received(1).Handle(Arg.Is<FooRequest>(x => x.Name == "Test"));
         }
 
         [Fact]

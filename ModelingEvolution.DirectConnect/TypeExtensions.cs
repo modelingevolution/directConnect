@@ -2,12 +2,28 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ModelingEvolution.DirectConnect;
 
 public static class TypeExtensions
 {
+    public static bool TryGetSingleton<TService>(this IServiceCollection collection, out TService? service)
+    where TService : class
+    {
+        for (int i = 0; i < collection.Count; i++)
+        {
+            if (collection[i].ServiceType == typeof(TService))
+            {
+                service = (TService)collection[i].ImplementationInstance;
+                return true;
+            }
+        }
 
+        service = null;
+        return false;
+
+    }
     public static IEnumerable<Type> HavingAttribute<T>(this IEnumerable<Type> items)
         where T : Attribute
     {

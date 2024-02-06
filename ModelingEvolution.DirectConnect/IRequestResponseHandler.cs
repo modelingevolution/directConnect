@@ -1,6 +1,6 @@
 namespace ModelingEvolution.DirectConnect;
 
-public interface IRequestResponseHandler<in TRequest, TResponse>
+public interface IRequestHandler<in TRequest, TResponse>
 {
     Task<TResponse> Handle(TRequest request);
 }

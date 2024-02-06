@@ -1,0 +1,17 @@
+syntax = "proto3";
+package modelingEvolution.directConnect.grpc;
+
+import "google/protobuf/duration.proto";  
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+service RequestController{
+	rpc SendVoid(DirectMessage) returns (google.protobuf.Empty);
+	rpc Send(DirectMessage) returns (DirectMessage);
+}
+
+message DirectMessage {
+	bytes messageId = 1;
+	bytes data = 2;
+}

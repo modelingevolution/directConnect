@@ -9,8 +9,8 @@
     &lt;TestId&gt;xUnit::C5A78EB8-AF61-42E9-9219-F8A2BBF2BA3C::net8.0::ModelingEvolution.DirectConnect.Tests.UnitTest1.RunningServerTest&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f5676cbf_002Ddebd_002D4fe0_002D8f26_002D4449da660757/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="RunningServerTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f5676cbf_002Ddebd_002D4fe0_002D8f26_002D4449da660757/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="RunningServerTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::C5A78EB8-AF61-42E9-9219-F8A2BBF2BA3C::net8.0::ModelingEvolution.DirectConnect.Tests.UnitTest1.RunningServerTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::C5A78EB8-AF61-42E9-9219-F8A2BBF2BA3C::net8.0::ModelingEvolution.DirectConnect.Tests.DirectConnectTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

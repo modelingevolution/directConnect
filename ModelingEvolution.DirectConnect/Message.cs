@@ -1,6 +1,6 @@
 using ProtoBuf;
 
-namespace ModelingEvolution.DirectConnect.Tests;
+namespace ModelingEvolution.DirectConnect;
 
 [ProtoContract]
 public class Message

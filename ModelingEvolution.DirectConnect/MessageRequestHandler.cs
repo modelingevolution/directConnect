@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ProtoBuf;
 
-namespace ModelingEvolution.DirectConnect.Tests;
+namespace ModelingEvolution.DirectConnect;
 
 public class MessageRequestHandler : RequestHandlerBase<Message>
 {

@@ -8,62 +8,6 @@ using ProtoBuf.Meta;
 
 namespace ModelingEvolution.DirectConnect.Tests
 {
-    public interface IRequestHandler
-    {
-        Task Handle(object request);
-    }
-    public interface IRequestResponseHandler<in TRequest, TResponse>
-    {
-        Task<TResponse> Handle(TRequest request);
-    }
-    public interface IRequestHandler<in TRequest> : IRequestHandler
-    {
-
-        Task Handle(TRequest request);
-    }
-
-    public abstract class RequestHandlerBase<TRequest> : IRequestHandler<TRequest>
-    {
-        public abstract Task Handle(TRequest request);
-
-        public Task Handle(object request)
-        {
-            return Handle((TRequest)request);
-        }
-    }
-
-    public class RequestSink<TRequest>: IRequestHandler<Message>
-    {
-        public Task Handle(Message request)
-        {
-            // Tutal lecimy  w kanal GRPC.
-        }
-
-        public Task Handle(object request)
-        {
-            return Handle((TRequest)request);
-        }
-    }
-
-    public static class ServiceCollectionExtensions
-    {
-        public static IServiceCollection AddRequestHandler(this IServiceCollection services)
-        {
-            services.AddSingleton(new TypeRegister().Index(typeof(Message)));
-            services.AddSingleton<IRequestHandler<Message>, MessageRequestHandler>();
-
-            return services;
-        }
-        public static IServiceCollection AddRequestSink(this IServiceCollection services)
-        {
-            services.AddSingleton(new TypeRegister().Index(typeof(Message)));
-            services.AddSingleton<IRequestHandler<Message>, RequestSink<Message>>();
-
-            return services;
-        }
-    }
-
-
     public class UnitTest1
     {
         

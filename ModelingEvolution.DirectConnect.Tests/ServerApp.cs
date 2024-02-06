@@ -15,7 +15,13 @@ class ServerApp : IDisposable, IAsyncDisposable
 
         // Add services to the container.
         builder.Services.AddGrpc();
+        
         configure?.Invoke(builder.Services);
+
+        // Adding a decorator for logging.
+        builder.Services.TryDecorate(typeof(IRequestHandler<>), typeof(LoggerRequestAspect<>));
+        builder.Services.TryDecorate(typeof(IRequestHandler<,>), typeof(LoggerRequestResponseAspect<,>));
+
         builder.WebHost.ConfigureKestrel(options =>
         {
             // Setup a HTTP/2 endpoint without TLS for development purposes.

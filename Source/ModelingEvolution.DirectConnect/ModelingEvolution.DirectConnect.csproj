@@ -4,6 +4,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>ModelingEvolution Team</Authors>
+    <Company>ModelingEvolution</Company>
+    <Copyright>ModelingEvolution</Copyright>
+    <RepositoryUrl>https://github.com/modelingevolution/directConnect.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/modelingevolution/directConnect</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,5 +30,11 @@
   <ItemGroup>
     <!-- Add your .proto files here -->
     <Protobuf Include="directCommunication.proto" GrpcServices="Server,Client" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 using System.Buffers;
 using FluentAssertions;
+using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -93,6 +94,35 @@ public class DirectConnectTests
         
         await Assert.ThrowsAsync<FaultException<FooFailed>>(async () => await invoker.InvokeVoid(new FooVoidRequest()));
         
+    }
+    [Fact]
+    public async Task SystemExceptionsAreNotSupported()
+    {
+        using ServerApp srv = new ServerApp();
+        var customHandler = Substitute.For<IRequestHandler<FooVoidRequest>>();
+        customHandler.Handle(Arg.Any<FooVoidRequest>())
+            .Throws<Exception>();
+
+        await srv.StartAsync(x =>
+        {
+            x.AddRequest<FooVoidRequest>()
+                .AddMessage<FooFailed>()
+                .AddSingleton(customHandler)
+                .AddServerDirectConnect();
+        });
+
+        using var client = new ClientApp();
+
+        var sp = client.Start(service => service.AddClientDirectConnect()
+            .AddMessage<FooFailed>()
+            .AddClientInvoker<FooVoidRequest>()
+            .AddClientInvoker<FooRequest, FooResponse>());
+
+        var clientPool = sp.GetRequiredService<IRequestInvokerPool>();
+        var invoker = clientPool.Get("http://localhost:5001");
+
+        await Assert.ThrowsAsync<RpcException>(async () => await invoker.InvokeVoid(new FooVoidRequest()));
+
     }
     [Fact]
     public async Task RequestResponse()

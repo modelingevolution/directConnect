@@ -49,10 +49,7 @@ static class RetFactory
                 var faultResult = ret.Result.Value;
                 return new Reply() { Fault = new ObjectEvenlope() { Data = ByteString.CopyFrom(faultResult.Payload.Span), MessageId = ByteString.CopyFrom(faultResult.MessageId.Span) } };
 
-            case InvocationResultType.Exception:
-                var exceptionResult = ret.Exception;
-                return new Reply() { Exception = ByteString.CopyFrom(exceptionResult.Value.Span) };
-
+            
             default:
                 throw new ArgumentOutOfRangeException();
         }

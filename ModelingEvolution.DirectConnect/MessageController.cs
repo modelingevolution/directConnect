@@ -57,37 +57,12 @@ internal class SingleRequestController
         catch (Exception ex)
         {
             // Should be an option;
-            return new InvocationResult(InvocationResultType.Exception, Exception: ex.Serialize());
+            throw;
         }
     }
     
 }
 
-static class ExceptionExtensions
-{
-    public static Exception DeserializeAsException(this byte[] data)
-    {
-        using (var memoryStream = new MemoryStream(data))
-        {
-#pragma warning disable SYSLIB0011
-            var formatter = new BinaryFormatter();
-#pragma warning restore SYSLIB0011
-            var obj = formatter.Deserialize(memoryStream);
-            return (Exception)obj;
-        }
-    }
-    public static byte[] Serialize(this Exception ex)
-    {
-        using (var memoryStream = new MemoryStream())
-        {
-#pragma warning disable SYSLIB0011
-            var formatter = new BinaryFormatter();
-#pragma warning restore SYSLIB0011
-            formatter.Serialize(memoryStream, ex);
-            return memoryStream.ToArray();
-        }
-    }
-}
 
 public abstract class FaultException : Exception
 {
@@ -108,7 +83,7 @@ public class FaultException<TData> : FaultException
 
 enum InvocationResultType
 {
-    Void, Object, Fault, Exception
+    Void, Object, Fault
 }
 readonly record struct InvocationResult(InvocationResultType Type, ObjectResult? Result=null,
     ReadOnlyMemory<byte>? Exception=null);
@@ -150,7 +125,7 @@ internal class RequestResponseController
         catch (Exception ex)
         {
             // Should be an option;
-            return new InvocationResult(InvocationResultType.Exception, Exception: ex.Serialize());
+            throw;
         }
     }
 }

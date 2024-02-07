@@ -15,7 +15,6 @@ message Reply{
 	oneof Payload {
 		ObjectEvenlope result = 1;
 		ObjectEvenlope fault = 2;
-		bytes exception = 3;
 		google.protobuf.Empty empty = 4;
 	}
 }

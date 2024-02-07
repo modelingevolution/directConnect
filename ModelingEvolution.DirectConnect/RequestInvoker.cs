@@ -47,10 +47,7 @@ class RequestInvoker<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
                 var exceptionObject = (Exception)Activator.CreateInstance(exceptionType, new object[] { faultMsg });
                 throw exceptionObject;
                 
-            case Reply.PayloadOneofCase.Exception:
-                throw result.Exception.ToArray().DeserializeAsException();
-
-                break;
+           
             case Reply.PayloadOneofCase.None:
             case Reply.PayloadOneofCase.Empty:
             default:
@@ -96,8 +93,6 @@ class RequestInvoker<TRequest> : IRequestHandler<TRequest>
                 var exceptionObject = (Exception)Activator.CreateInstance(exceptionType, new object[] { faultMsg });
                 throw exceptionObject;
 
-            case Reply.PayloadOneofCase.Exception:
-                throw result.Exception.ToArray().DeserializeAsException();
 
             case Reply.PayloadOneofCase.None:
             case Reply.PayloadOneofCase.Result:

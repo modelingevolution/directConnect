@@ -7,11 +7,20 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/empty.proto";
 
 service RequestController{
-	rpc SendVoid(DirectMessage) returns (google.protobuf.Empty);
-	rpc Send(DirectMessage) returns (DirectMessage);
+	rpc SendVoid(ObjectEvenlope) returns (Reply);
+	rpc Send(ObjectEvenlope) returns (Reply);
+	rpc Steam(stream ObjectEvenlope) returns (Reply);
+}
+message Reply{
+	oneof Payload {
+		ObjectEvenlope result = 1;
+		ObjectEvenlope fault = 2;
+		bytes exception = 3;
+		google.protobuf.Empty empty = 4;
+	}
 }
 
-message DirectMessage {
+message ObjectEvenlope {
 	bytes messageId = 1;
 	bytes data = 2;
 }

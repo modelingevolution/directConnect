@@ -14,6 +14,12 @@ namespace ModelingEvolution.DirectConnect.Tests
     }
 
     [ProtoContract]
+    public class FooFailed
+    {
+        [ProtoMember(1)] public string Name { get; set; } = "Error";
+    }
+
+    [ProtoContract]
     public class FooRequest
     {
         [ProtoMember(1)] public string Name { get; set; } = "Test";

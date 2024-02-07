@@ -18,20 +18,43 @@ class GrpcRequestController : Grpc.RequestController.RequestControllerBase
 
     
 
-    public override async Task<Empty> SendVoid(DirectMessage request, ServerCallContext context)
+    public override async Task<Reply> SendVoid(ObjectEvenlope request, ServerCallContext context)
     {
-        await _singleRequestController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
-        return empty;
+        var ret = await _singleRequestController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
+        return ret.ToReply();
+
     }
 
-    public override async Task<DirectMessage> Send(DirectMessage request, ServerCallContext context)
+    public override async Task<Reply> Send(ObjectEvenlope request, ServerCallContext context)
     {
-        var result = await _requestResponseController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
+        var ret = await _requestResponseController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
+        return ret.ToReply();
+    }
+}
 
-        return new DirectMessage()
+static class RetFactory
+{
+    public static Reply ToReply(this InvocationResult ret)
+    {
+        switch (ret.Type)
         {
-            MessageId = ByteString.CopyFrom(result.MessageId.Span),
-            Data = ByteString.CopyFrom(result.Payload.Span)
-        };
+            case InvocationResultType.Void:
+                return new Reply() { Empty = new Empty() };
+
+            case InvocationResultType.Object:
+                var objectResult = ret.Result.Value;
+                return new Reply() { Result = new ObjectEvenlope() { Data = ByteString.CopyFrom(objectResult.Payload.Span), MessageId = ByteString.CopyFrom(objectResult.MessageId.Span) } };
+
+            case InvocationResultType.Fault:
+                var faultResult = ret.Result.Value;
+                return new Reply() { Fault = new ObjectEvenlope() { Data = ByteString.CopyFrom(faultResult.Payload.Span), MessageId = ByteString.CopyFrom(faultResult.MessageId.Span) } };
+
+            case InvocationResultType.Exception:
+                var exceptionResult = ret.Exception;
+                return new Reply() { Exception = ByteString.CopyFrom(exceptionResult.Value.Span) };
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 }

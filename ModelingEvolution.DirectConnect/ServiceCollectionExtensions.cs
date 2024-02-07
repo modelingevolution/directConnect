@@ -34,6 +34,15 @@ public static class ServiceCollectionExtensions
         builder.MapGrpcService<GrpcRequestController>();
         return builder;
     }
+
+    public static IServiceCollection AddMessage<TMessage>(this IServiceCollection services)
+    {
+        if (!services.TryGetSingleton<TypeRegister>(out var registry))
+            services.AddSingleton(registry = new TypeRegister());
+
+        registry.Index(typeof(TMessage));
+        return services;
+    }
     public static IServiceCollection AddRequest<TRequest>(this IServiceCollection services)
     {
         if (!services.TryGetSingleton<TypeRegister>(out var registry))

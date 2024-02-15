@@ -13,12 +13,15 @@ service RequestController{
 }
 message Reply{
 	oneof Payload {
-		ObjectEvenlope result = 1;
-		ObjectEvenlope fault = 2;
+		ObjectEvenlope object = 1;
+		ArrayEnvelope array = 2;
+		ObjectEvenlope fault = 3;
 		google.protobuf.Empty empty = 4;
 	}
 }
-
+message ArrayEnvelope{
+	repeated ObjectEvenlope Items = 1;
+}
 message ObjectEvenlope {
 	bytes messageId = 1;
 	bytes data = 2;

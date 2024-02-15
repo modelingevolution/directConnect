@@ -11,12 +11,15 @@ internal class ObjectSerializer
 {
    private static readonly AsyncLocal<ArrayBufferWriter<byte>> _buffer= new ();
    private static readonly ConcurrentDictionary<Type, byte[]> _messageId = new();
-   
 
+   public void Init()
+   {
+       _buffer.Value ??= new ArrayBufferWriter<byte>();
+       _buffer.Value.Clear();
+    }
     public ObjectResult Serialize(object obj)
     {
-        _buffer.Value ??= new ArrayBufferWriter<byte>();
-        _buffer.Value.Clear();
+        
         Serializer.Serialize(_buffer.Value, obj);
         var messageId = _messageId.GetOrAdd(obj.GetType(), x => x.NameHash());
         return new ObjectResult(messageId, _buffer.Value.WrittenMemory);
@@ -51,6 +54,7 @@ internal class SingleRequestController
         }
         catch (FaultException ex)
         {
+            _objectSerializer.Init();
             return new InvocationResult(InvocationResultType.Fault,  _objectSerializer.Serialize(ex.GetFaultData()));
 
         }
@@ -83,9 +87,9 @@ public class FaultException<TData> : FaultException
 
 enum InvocationResultType
 {
-    Void, Object, Fault
+    Void, Object, Fault, Objects
 }
-readonly record struct InvocationResult(InvocationResultType Type, ObjectResult? Result=null,
+readonly record struct InvocationResult(InvocationResultType Type, ObjectResult? Result = null, ObjectResult[] Results = null,
     ReadOnlyMemory<byte>? Exception=null);
 
 readonly record struct ObjectResult(ReadOnlyMemory<byte> MessageId, ReadOnlyMemory<byte> Payload);
@@ -115,10 +119,26 @@ internal class RequestResponseController
         try
         {
             var result = await adapter.Handle(message);
-            return new InvocationResult(InvocationResultType.Object, _objectSerializer.Serialize(result));
+            _objectSerializer.Init();
+            if (result.GetType().IsArray)
+            {
+                var array = (Array)result;
+                ObjectResult[] results = new ObjectResult[array.Length];
+                for (int i = 0; i < array.Length; i++)
+                {
+                    results[i] = _objectSerializer.Serialize(array.GetValue(i));
+                }
+
+                return new InvocationResult(InvocationResultType.Objects, Results: results);
+            }
+            else
+            return
+                new InvocationResult(InvocationResultType.Object, _objectSerializer.Serialize(result));
+            
         }
         catch (FaultException ex)
         {
+            _objectSerializer.Init();
             return new InvocationResult(InvocationResultType.Fault, _objectSerializer.Serialize(ex.GetFaultData()));
 
         }

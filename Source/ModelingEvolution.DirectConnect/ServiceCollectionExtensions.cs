@@ -57,7 +57,15 @@ public static class ServiceCollectionExtensions
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
             services.AddSingleton(registry = new TypeRegister());
 
-        registry.Index(typeof(TRequest)).Index(typeof(TResponse));
+        registry.Index(typeof(TRequest));
+        if (!typeof(TResponse).IsArray)
+            registry.Index(typeof(TResponse));
+        else
+        {
+            var elementType = typeof(TResponse).GetElementType();
+            if (!elementType.IsInterface)
+                registry.Index(elementType);
+        }
         services.AddSingleton<IRequestResponseHandlerAdapter<TRequest>, RequestHandlerAdapter<TRequest, TResponse>>();
         
         return services;
@@ -87,8 +95,16 @@ public static class ServiceCollectionExtensions
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
             services.AddSingleton(registry = new TypeRegister());
 
-        registry.Index(typeof(TRequest))
-            .Index(typeof(TResponse));
+        registry.Index(typeof(TRequest));
+
+        if (!typeof(TResponse).IsArray)
+            registry.Index(typeof(TResponse));
+        else
+        {
+            var elementType = typeof(TResponse).GetElementType();
+            if(!elementType.IsInterface)
+                registry.Index(elementType);
+        }
 
         services.AddScoped<IRequestHandler<TRequest,TResponse>, RequestInvoker<TRequest,TResponse>>();
 

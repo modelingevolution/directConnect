@@ -25,8 +25,13 @@ namespace ModelingEvolution.DirectConnect.Tests
         [ProtoMember(1)] public string Name { get; set; } = "Test";
     }
     [ProtoContract]
-    public class FooResponse
+    public class FooResponse : IFooResponse
     {
         [ProtoMember(1)] public string Name { get; set; }
+    }
+
+    public interface IFooResponse
+    {
+        public string Name { get; }
     }
 }

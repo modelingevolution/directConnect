@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ModelingEvolution.DirectConnect.Grpc;
 using ProtoBuf;
 using System.Buffers;
+using System.Collections;
 using System.Reflection;
 
 namespace ModelingEvolution.DirectConnect;
@@ -36,10 +37,28 @@ class RequestInvoker<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
         });
         switch (result.PayloadCase)
         {
-            case Reply.PayloadOneofCase.Result:
-                var type = _typeRegister.GetRequiredType(new Guid(result.Result.MessageId.Span));
-                return Serializer.NonGeneric.Deserialize(type, result.Result.Data.Span) is TResponse r ? r : default(TResponse);
-                
+            case Reply.PayloadOneofCase.Object:
+                var type = _typeRegister.GetRequiredType(new Guid(result.Object.MessageId.Span));
+                return Serializer.NonGeneric.Deserialize(type, result.Object.Data.Span) is TResponse r ? r : default(TResponse);
+
+            case Reply.PayloadOneofCase.Array:
+                var responseType = typeof(TResponse);
+                if (responseType.IsArray)
+                {
+                    var items = result.Array.Items;
+                    var array = Array.CreateInstance(responseType.GetElementType(), items.Count);
+
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        var elemType = _typeRegister.GetRequiredType(new Guid(items[i].MessageId.Span));
+                        var item = Serializer.NonGeneric.Deserialize(elemType, items[i].Data.Span);
+                        array.SetValue(item, i);
+                    }
+
+                    return (TResponse)((object)array);
+                }
+                else throw new NotSupportedException($"Response {responseType.Name} is not an array.");
+
             case Reply.PayloadOneofCase.Fault:
                 var faultType = _typeRegister.GetRequiredType(new Guid(result.Fault.MessageId.Span));
                 var faultMsg = Serializer.NonGeneric.Deserialize(faultType, result.Fault.Data.Span);
@@ -95,7 +114,7 @@ class RequestInvoker<TRequest> : IRequestHandler<TRequest>
 
 
             case Reply.PayloadOneofCase.None:
-            case Reply.PayloadOneofCase.Result:
+            case Reply.PayloadOneofCase.Object:
             default:
                 throw new ArgumentOutOfRangeException();
         }

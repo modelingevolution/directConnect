@@ -152,6 +152,40 @@ public class DirectConnectTests
 
         await customHandler.Received(1).Handle(Arg.Is<FooRequest>(x => x.Name == "Test"));
     }
+    [Fact]
+    public async Task RequestArrayResponse()
+    {
+        using ServerApp srv = new ServerApp();
+        var customHandler = Substitute.For<IRequestHandler<FooRequest, IFooResponse[]>>();
+        customHandler.Handle(Arg.Any<FooRequest>()).Returns(Task.FromResult((IFooResponse[])(new []
+        {
+            new FooResponse() { Name = "Test2" },
+            new FooResponse() { Name = "Test3" }
+        })));
+
+        await srv.StartAsync(x =>
+        {
+            x.AddRequest<FooVoidRequest>()
+                .AddRequestResponse<FooRequest, IFooResponse[]>()
+                .AddSingleton(customHandler)
+                .AddMessage<FooResponse>()
+                .AddServerDirectConnect();
+        });
+
+        using var client = new ClientApp();
+
+        var sp = client.Start(service => service.AddClientDirectConnect()
+            .AddClientInvoker<FooVoidRequest>()
+            .AddMessage<FooResponse>()
+            .AddClientInvoker<FooRequest, IFooResponse[]>());
+
+        var clientPool = sp.GetRequiredService<IRequestInvokerPool>();
+        var invoker = clientPool.Get("http://localhost:5001");
+        var ret = await invoker.Invoke<FooRequest, IFooResponse[]>(new FooRequest());
+        ret[0].Name.Should().Be("Test2");
+
+        await customHandler.Received(1).Handle(Arg.Is<FooRequest>(x => x.Name == "Test"));
+    }
 
 
 }

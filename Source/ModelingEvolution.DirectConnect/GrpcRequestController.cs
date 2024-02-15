@@ -43,8 +43,14 @@ static class RetFactory
 
             case InvocationResultType.Object:
                 var objectResult = ret.Result.Value;
-                return new Reply() { Result = new ObjectEvenlope() { Data = ByteString.CopyFrom(objectResult.Payload.Span), MessageId = ByteString.CopyFrom(objectResult.MessageId.Span) } };
-
+                return new Reply() { Object = new ObjectEvenlope() { Data = ByteString.CopyFrom(objectResult.Payload.Span), MessageId = ByteString.CopyFrom(objectResult.MessageId.Span) } };
+            
+            case InvocationResultType.Objects:
+                var tmp = new Reply();
+                tmp.Array = new ArrayEnvelope();
+                tmp.Array.Items.Add(ret.Results.Select(x => new ObjectEvenlope()
+                    { Data = ByteString.CopyFrom(x.Payload.Span), MessageId = ByteString.CopyFrom(x.MessageId.Span) }));
+                return tmp;
             case InvocationResultType.Fault:
                 var faultResult = ret.Result.Value;
                 return new Reply() { Fault = new ObjectEvenlope() { Data = ByteString.CopyFrom(faultResult.Payload.Span), MessageId = ByteString.CopyFrom(faultResult.MessageId.Span) } };

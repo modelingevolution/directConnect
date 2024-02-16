@@ -458,3 +458,4 @@ dotnet-app*.json
 *.heartbeat.bin
 
 /Build/cake-n.ps1
+/Build/cake.ps1

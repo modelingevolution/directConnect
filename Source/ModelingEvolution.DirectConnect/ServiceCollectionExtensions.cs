@@ -54,20 +54,27 @@ public static class ServiceCollectionExtensions
     }
     public static IServiceCollection AddRequestResponse<TRequest,TResponse>(this IServiceCollection services)
     {
+        return services.AddRequestResponse(typeof(TRequest), typeof(TResponse));
+    }
+    public static IServiceCollection AddRequestResponse(this IServiceCollection services, Type requestType, Type responseType)
+    {
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
             services.AddSingleton(registry = new TypeRegister());
 
-        registry.Index(typeof(TRequest));
-        if (!typeof(TResponse).IsArray)
-            registry.Index(typeof(TResponse));
+        registry.Index(requestType);
+        if (!responseType.IsArray)
+            registry.Index(responseType);
         else
         {
-            var elementType = typeof(TResponse).GetElementType();
+            var elementType = responseType.GetElementType();
             if (!elementType.IsInterface)
                 registry.Index(elementType);
         }
-        services.AddSingleton<IRequestResponseHandlerAdapter<TRequest>, RequestHandlerAdapter<TRequest, TResponse>>();
-        
+
+        var serviceType = typeof(IRequestResponseHandlerAdapter<>).MakeGenericType(requestType);
+        var implementationType = typeof(RequestHandlerAdapter<,>).MakeGenericType(requestType, responseType);
+        services.AddSingleton(serviceType, implementationType);
+
         return services;
     }
     public static IServiceCollection AddRequestHandler<TRequest, TRequestHandler>(this IServiceCollection services)
@@ -75,7 +82,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddRequest<TRequest>();
 
-        services.AddSingleton<IRequestHandler<TRequest>, TRequestHandler>();
+        services.AddScoped<IRequestHandler<TRequest>, TRequestHandler>();
        
         return services;
     }

@@ -37,12 +37,21 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMessage<TMessage>(this IServiceCollection services)
     {
+        var types = new [] {typeof(TMessage)};
+
+        services.AddMessages(types);
+        return services;
+    }
+
+    public static IServiceCollection AddMessages(this IServiceCollection services, IEnumerable<Type> types)
+    {
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
             services.AddSingleton(registry = new TypeRegister());
 
-        registry.Index(typeof(TMessage));
+        registry.Index(types);
         return services;
     }
+
     public static IServiceCollection AddRequest<TRequest>(this IServiceCollection services)
     {
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
@@ -97,25 +106,29 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
-    public static IServiceCollection AddClientInvoker<TRequest,TResponse>(this IServiceCollection services)
+    public static IServiceCollection AddClientInvoker(this IServiceCollection services, Type requestType, Type responseType)
     {
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
             services.AddSingleton(registry = new TypeRegister());
 
-        registry.Index(typeof(TRequest));
+        registry.Index(requestType);
 
-        if (!typeof(TResponse).IsArray)
-            registry.Index(typeof(TResponse));
+        if (!responseType.IsArray)
+            registry.Index(responseType);
         else
         {
-            var elementType = typeof(TResponse).GetElementType();
-            if(!elementType.IsInterface)
+            var elementType = responseType.GetElementType();
+            if (!elementType.IsInterface)
                 registry.Index(elementType);
         }
 
-        services.AddScoped<IRequestHandler<TRequest,TResponse>, RequestInvoker<TRequest,TResponse>>();
+        var srv = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
+        var impl = typeof(RequestInvoker<,>).MakeGenericType(requestType, responseType);
+        
+        services.AddScoped(srv,impl);
 
         return services;
     }
+    public static IServiceCollection AddClientInvoker<TRequest,TResponse>(this IServiceCollection services) => services.AddClientInvoker(typeof(TRequest), typeof(TResponse));
 }
 

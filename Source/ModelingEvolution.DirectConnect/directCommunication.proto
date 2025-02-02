@@ -11,6 +11,22 @@ service RequestController{
 	rpc Send(ObjectEvenlope) returns (Reply);
 	rpc Steam(stream ObjectEvenlope) returns (Reply);
 }
+
+service BlobController {
+	rpc Download(ObjectEvenlope) returns (stream DownloadReply);
+}
+
+message DownloadReply {
+	oneof Payload{
+		ObjectEvenlope metadata = 1;
+		ObjectEvenlope fault = 3;
+		bytes data = 2;
+	}
+}
+message BlobControlMsg{
+
+}
+
 message Reply{
 	oneof Payload {
 		ObjectEvenlope object = 1;

@@ -1,33 +1,87 @@
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Microsoft.Extensions.DependencyInjection;
 using ModelingEvolution.DirectConnect.Grpc;
+using ProtoBuf;
+using ProtoBuf.Serializers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ModelingEvolution.DirectConnect;
 
-class GrpcRequestController : Grpc.RequestController.RequestControllerBase
+class BlobController(TypeRegister typeRegister, IServiceProvider serviceProvider) : Grpc.BlobController.BlobControllerBase
 {
-    private readonly SingleRequestController _singleRequestController;
-    private readonly RequestResponseController _requestResponseController;
-    private static readonly Empty empty = new Empty();
-    public GrpcRequestController(SingleRequestController singleRequestController, RequestResponseController requestResponseController)
+    class BlobContext(IServerStreamWriter<DownloadReply> responseStream) : IBlobContext
     {
-        _singleRequestController = singleRequestController;
-        _requestResponseController = requestResponseController;
+        private readonly ObjectSerializer serializer = new ObjectSerializer().Init();
+        public async Task Failed<T>(T obj)
+        {
+            var msg = serializer.Serialize(obj);
+            await responseStream.WriteAsync(new DownloadReply
+            {
+                Fault = new ObjectEvenlope()
+                {
+                    MessageId = ByteString.CopyFrom(msg.MessageId.Span),
+                    Data = ByteString.CopyFrom(msg.Payload.Span)
+                }
+            });
+        }
+
+        public async Task Metadata<T>(T obj)
+        {
+            var msg = serializer.Serialize(obj);
+            await responseStream.WriteAsync(new DownloadReply
+            {
+                Metadata = new ObjectEvenlope()
+                {
+                    MessageId = ByteString.CopyFrom(msg.MessageId.Span),
+                    Data = ByteString.CopyFrom(msg.Payload.Span)
+                }
+            });
+        }
+    }
+    public override async Task Download(ObjectEvenlope request, IServerStreamWriter<DownloadReply> responseStream, ServerCallContext context)
+    {
+        var messageId = new Guid(request.MessageId.Span);
+        var messageType = typeRegister.GetRequiredType(messageId);
+        var message = Serializer.NonGeneric.Deserialize(messageType, request.Data.Memory);
+
+        var handlerType = typeof(IBlobRequestHandler<>).MakeGenericType(messageType);
+        var srv = (IBlobRequestHandler)serviceProvider.GetRequiredService(handlerType);
+
+        
+        BlobContext cx = new BlobContext(responseStream);
+
+        await foreach (var m in srv.Handle(message, cx))
+        {
+            await responseStream.WriteAsync(new DownloadReply
+            {
+                Data = ByteString.CopyFrom(m.Memory.Span)
+            });
+            m.Dispose();
+        }
     }
 
     
+}
+
+
+class GrpcRequestController(RequestDispatcher requestDispatcher, RequestResponseController requestResponseController)
+    : Grpc.RequestController.RequestControllerBase
+{
+    private static readonly Empty empty = new Empty();
+
 
     public override async Task<Reply> SendVoid(ObjectEvenlope request, ServerCallContext context)
     {
-        var ret = await _singleRequestController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
+        var ret = await requestDispatcher.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
         return ret.ToReply();
 
     }
 
     public override async Task<Reply> Send(ObjectEvenlope request, ServerCallContext context)
     {
-        var ret = await _requestResponseController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
+        var ret = await requestResponseController.Dispatch(new Guid(request.MessageId.Span), request.Data.Memory);
         return ret.ToReply();
     }
 }

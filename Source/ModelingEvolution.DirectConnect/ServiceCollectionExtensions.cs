@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddServerDirectConnect(this IServiceCollection services)
     {
-        services.AddSingleton<SingleRequestController>();
+        services.AddSingleton<RequestDispatcher>();
         services.AddSingleton<RequestResponseController>();
         return services;
     }
@@ -23,15 +23,22 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddClientDirectConnect(this IServiceCollection services)
     {
         services.AddScoped<IRequestInvoker, RequestInvoker>();
+        
+        // BlobFactory does not support aspects.
+        services.AddSingleton<ChannelPool>();
+        services.AddSingleton<BlobClientFactory>();
+
+        // This is cleaver - because we will have all aspects injected.
         services.AddScoped<GrpcChannelScopeFactory>();
         services.AddScoped<GrpcChannel>(sp => sp.GetRequiredService<GrpcChannelScopeFactory>().Factory());
-        services.AddSingleton<IRequestInvokerPool, RequestInvokerPool>();
+        services.AddSingleton<IRequestInvokerPool, RequestInvokerPool>(); 
         return services;
     }
 
     public static IEndpointRouteBuilder MapDirectConnect(this IEndpointRouteBuilder builder)
     {
         builder.MapGrpcService<GrpcRequestController>();
+        builder.MapGrpcService<BlobController>();
         return builder;
     }
 
@@ -40,6 +47,18 @@ public static class ServiceCollectionExtensions
         var types = new [] {typeof(TMessage)};
 
         services.AddMessages(types);
+        return services;
+    }
+
+    public static IServiceCollection AddBlobHandler<TMessage,THandler >(this IServiceCollection services)
+        where THandler : class, IBlobRequestHandler<TMessage>
+    {
+        if (!services.TryGetSingleton<TypeRegister>(out var registry))
+            services.AddSingleton(registry = new TypeRegister());
+
+        registry!.Index(typeof(TMessage));
+        
+        services.AddScoped<IBlobRequestHandler<TMessage>, THandler>();
         return services;
     }
 
@@ -57,7 +76,7 @@ public static class ServiceCollectionExtensions
         if (!services.TryGetSingleton<TypeRegister>(out var registry))
             services.AddSingleton(registry = new TypeRegister());
 
-        registry.Index(typeof(TRequest));
+        registry!.Index(typeof(TRequest));
         services.AddSingleton<RequestHandlerAdapter<TRequest>>();
         return services;
     }
@@ -95,6 +114,7 @@ public static class ServiceCollectionExtensions
        
         return services;
     }
+    
     public static IServiceCollection AddClientInvoker<TRequest>(this IServiceCollection services)
     {
         if (!services.TryGetSingleton<TypeRegister>(out var registry))

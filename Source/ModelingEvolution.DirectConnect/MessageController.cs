@@ -12,11 +12,12 @@ internal class ObjectSerializer
    private static readonly AsyncLocal<ArrayBufferWriter<byte>> _buffer= new ();
    private static readonly ConcurrentDictionary<Type, byte[]> _messageId = new();
 
-   public void Init()
+   public ObjectSerializer Init()
    {
        _buffer.Value ??= new ArrayBufferWriter<byte>();
        _buffer.Value.Clear();
-    }
+       return this;
+   }
     public ObjectResult Serialize(object obj)
     {
         
@@ -25,13 +26,13 @@ internal class ObjectSerializer
         return new ObjectResult(messageId, _buffer.Value.WrittenMemory);
     }
 }
-internal class SingleRequestController
+internal class RequestDispatcher
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly TypeRegister _typeRegister;
     private readonly ConcurrentDictionary<Type, Type> _adapterTypeByMessageType = new();
     private readonly ObjectSerializer _objectSerializer = new();
-    public SingleRequestController(IServiceProvider serviceProvider, TypeRegister typeRegister)
+    public RequestDispatcher(IServiceProvider serviceProvider, TypeRegister typeRegister)
     {
         _serviceProvider = serviceProvider;
         _typeRegister = typeRegister;
@@ -71,6 +72,12 @@ internal class SingleRequestController
 public abstract class FaultException : Exception
 {
     protected internal abstract object GetFaultData();
+
+    public static FaultException Create(object data)
+    {
+        // use reflection to create stronly typed FaultException<TData>, TData = data.GetType();
+        return (FaultException)Activator.CreateInstance(typeof(FaultException<>).MakeGenericType(data.GetType()), data);
+    }
 }
 
 public class FaultException<TData> : FaultException

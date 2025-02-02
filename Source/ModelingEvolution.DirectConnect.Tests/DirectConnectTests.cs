@@ -8,6 +8,25 @@ using ProtoBuf;
 
 namespace ModelingEvolution.DirectConnect.Tests;
 
+public class BlobHandler : IBlobRequestHandler<FooVoidRequest>
+{
+    public async IAsyncEnumerable<IMemoryOwner<byte>> Handle(FooVoidRequest request, IBlobContext context)
+    {
+        await context.Metadata(new FooResponse() { Name = request.Name });
+        
+        yield return ReturnChunk(69);
+        yield return ReturnChunk(66);
+        yield return ReturnChunk(99);
+    }
+
+    private static IMemoryOwner<byte> ReturnChunk(byte tmp)
+    {
+        var data = MemoryPool<byte>.Shared.Rent(1);
+        data.Memory.Span[0] = tmp;
+        return data;
+    }
+}
+
 public class DirectConnectTests
 {
     
@@ -23,7 +42,7 @@ public class DirectConnectTests
     public async Task ServerDispatching()
     {
         IServiceCollection service = new ServiceCollection();
-        service.AddSingleton<SingleRequestController>();
+        service.AddSingleton<RequestDispatcher>();
         service.AddSingleton<RequestResponseController>();
         service.AddRequest<FooVoidRequest>();
         var customHandler = Substitute.For<IRequestHandler<FooVoidRequest>>();
@@ -31,14 +50,43 @@ public class DirectConnectTests
         IServiceProvider sp = service.BuildServiceProvider();
             
           
-        var handler =sp.GetRequiredService<SingleRequestController>();
+        var handler =sp.GetRequiredService<RequestDispatcher>();
         var (data, messageId )= Example();
         await handler.Dispatch(messageId, new ReadOnlyMemory<byte>(data));
 
         await customHandler.Received(1).Handle(Arg.Is<FooVoidRequest>(x => x.Name == "Test"));
     }
 
-    
+    [Fact]
+    public async Task BlobRequest()
+    {
+        using ServerApp srv = new ServerApp();
+        
+
+        await srv.StartAsync(x =>
+        {
+            x.AddBlobHandler<FooVoidRequest,BlobHandler>()
+                .AddServerDirectConnect();
+        });
+
+        using var client = new ClientApp();
+
+        var sp = client.Start(service => service.AddClientDirectConnect().AddMessage<FooResponse>());
+
+        var blobFactory = sp.GetRequiredService<BlobClientFactory>();
+        var invoker = blobFactory.CreateClient<FooVoidRequest>("http://localhost:5001");
+        
+        var stream = await invoker.Execute<FooResponse>(new FooVoidRequest() { Name="Foo69"});
+        stream.Metadata.Name.Should().Be("Foo69");
+
+        List<byte> tmp = new();
+        await foreach (var i in stream.Chunks())
+        {
+            tmp.Add(i.Span[0]);
+        }
+
+        tmp.Should().HaveCount(3);
+    }
 
     [Fact]
     public async Task VoidRequest()

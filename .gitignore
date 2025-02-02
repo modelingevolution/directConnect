@@ -459,3 +459,5 @@ dotnet-app*.json
 
 /Build/cake-n.ps1
 /Build/cake.ps1
+/Source/ModelingEvolution.DirectConnect/.api
+*.api
